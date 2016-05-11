@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__.'/../vendor/autoload.php';
+
+use App\FeedReader;
+use Symfony\Component\Console\Application as Console;
+use Pimple\Container;
+
+// Create a container and register the feed reader provider
+$container = new Container();
+$container->register(new FeedReader\FeedReaderProvider());
+
+// Create a console and resolve the feed reader command from the container
+$console = new Console();
+$console->add($container[FeedReader\FeedReaderCommand::class]);
+
+// Do the work
+$console->run();
