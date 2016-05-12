@@ -1,0 +1,6 @@
+{
+  "name": "Dynamic dependency injection",
+  "tagline": "Sample PHP code that demonstrates injecting a dependency that is not known until runtime.",
+  "body": "### TODO\r\n\r\n```php\r\n<?php $state = 'TODO'; ?>\r\n```",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
