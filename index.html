@@ -21,11 +21,24 @@
     <section class="main-content">
       <p>In this article I would like to demonstrate a way to inject dependencies that are not known until runtime. There are many use cases for this and in essence it is about choosing between concrete implementations of some common interface. In object oriented design this is known at the Strategy pattern. The choice can be made in various ways, for example via a configuration option or a command line parameter in case of a console command. </p>
 
-<p>Let's say we have to process some remote feed periodically. Hm, this sounds like a cron job. For the sake of not reinventing the wheel let's use some well known libraries for our Feed Reader project:</p>
+<p>Let's say we have to process some remote feeds periodically. Hm, this sounds like a cron job. For the sake of not reinventing the wheel we will use some well known libraries for our shiny new Feed Reader project, namely the Symfony Console component, which is the de-facto component in PHP to create CLI commands, and the Pimple, which is a simple dependency injection container.</p>
 
-<div class="highlight highlight-source-shell"><pre>mkdir feed-reader <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> feed-reader
-composer require symfony/console
-composer require pimple/pimple</pre></div>
+<p>First let's set up the project:</p>
+
+<div class="highlight highlight-source-shell"><pre>$ mkdir feed-reader <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> feed-reader
+$ curl -s https://getcomposer.org/installer <span class="pl-k">|</span> php
+$ composer.phar require symfony/console
+$ composer.phar require pimple/pimple</pre></div>
+
+<p>Our code will live in the app/ directory and under the App namespace.</p>
+
+<div class="highlight highlight-source-shell"><pre>$ vim composer.json
+<span class="pl-s"><span class="pl-pds">"</span>autoload<span class="pl-pds">"</span></span>: {
+    <span class="pl-s"><span class="pl-pds">"</span>psr-4<span class="pl-pds">"</span></span>: {
+        <span class="pl-s"><span class="pl-pds">"</span>App<span class="pl-cce">\\</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>app/<span class="pl-pds">"</span></span>
+    }
+}
+$ mkdir app <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> app</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/pwm/dynamic-dependency-injection">Dynamic dependency injection</a> is maintained by <a href="https://github.com/pwm">pwm</a>.</span>
