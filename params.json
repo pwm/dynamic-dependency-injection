@@ -1,6 +1,6 @@
 {
   "name": "Dynamic dependency injection",
   "tagline": "Sample PHP code that demonstrates injecting a dependency that is not known until runtime.",
-  "body": "### TODO\r\n\r\n```php\r\n<?php $state = 'TODO'; ?>\r\n```",
+  "body": "In this article I would like to demonstrate a way to inject dependencies that are not known until runtime. There are many use cases for this and in essence it is about choosing between concrete implementations of some common interface. In object oriented design this is known at the Strategy pattern. The choice can be made in various ways, for example via a configuration option or a command line parameter in case of a console command. \r\n\r\nLet's say we have to process some remote feed periodically. Hm, this sounds like a cron job. For the sake of not reinventing the wheel let's use some well known libraries for our Feed Reader project:\r\n\r\n```bash\r\nmkdir feed-reader && cd feed-reader\r\ncomposer require symfony/console\r\ncomposer require pimple/pimple\r\n```\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
   "note": "Don't delete this file! It's used internally to help with page regeneration."
 }
