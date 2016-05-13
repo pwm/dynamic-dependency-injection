@@ -40,6 +40,38 @@ $ composer.phar require pimple/pimple</pre></div>
 }
 $ mkdir app <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> app</pre></div>
 
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">App\FeedReader\Strategies\JsonFeedReader</span>;</span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Command\Command</span>;</span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Input\InputArgument</span>;</span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Input\InputInterface</span>;</span>
+<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Output\OutputInterface</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">FeedReaderCommand</span> <span class="pl-k">extends</span> <span class="pl-e">Command</span></span>
+<span class="pl-s1">{</span>
+<span class="pl-s1">    <span class="pl-k">private</span> <span class="pl-smi">$feedReader</span>;</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-c1">__construct</span>(<span class="pl-c1">JsonFeedReader</span> <span class="pl-smi">$feedReader</span>)</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-k">parent</span><span class="pl-k">::</span>__construct();</span>
+<span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span> <span class="pl-k">=</span> <span class="pl-smi">$feedReader</span>;</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">protected</span> <span class="pl-k">function</span> <span class="pl-en">configure</span>()</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$this</span></span>
+<span class="pl-s1">            <span class="pl-k">-&gt;</span>setName(<span class="pl-s"><span class="pl-pds">'</span>feed-reader<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">            <span class="pl-k">-&gt;</span>setDescription(<span class="pl-s"><span class="pl-pds">'</span>This command reads feeds. Well, it simulates it anyway.<span class="pl-pds">'</span></span>)</span>
+<span class="pl-s1">            <span class="pl-k">-&gt;</span>addArgument(<span class="pl-s"><span class="pl-pds">'</span>feedUrl<span class="pl-pds">'</span></span>, <span class="pl-c1">InputArgument</span><span class="pl-k">::</span><span class="pl-c1">REQUIRED</span>, <span class="pl-s"><span class="pl-pds">'</span>The url of the feed.<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">protected</span> <span class="pl-k">function</span> <span class="pl-en">execute</span>(<span class="pl-c1">InputInterface</span> <span class="pl-smi">$input</span>, <span class="pl-c1">OutputInterface</span> <span class="pl-smi">$output</span>)</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$output</span><span class="pl-k">-&gt;</span>writeln(<span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span><span class="pl-k">-&gt;</span>read(<span class="pl-smi">$input</span><span class="pl-k">-&gt;</span>getArgument(<span class="pl-s"><span class="pl-pds">'</span>feedUrl<span class="pl-pds">'</span></span>)));</span>
+<span class="pl-s1">    }</span>
+<span class="pl-s1">}</span></pre></div>
+
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/pwm/dynamic-dependency-injection">Dynamic dependency injection</a> is maintained by <a href="https://github.com/pwm">pwm</a>.</span>
 
