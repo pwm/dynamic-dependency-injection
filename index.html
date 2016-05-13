@@ -81,7 +81,8 @@
 
 <p>Finally let's create the runnable "console.php" script that bootstraps this whole thing:</p>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-pse">&lt;?php</span><span class="pl-s1"></span>
+<span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>add(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\</span><span class="pl-c1">FeedReaderCommand</span>(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">JsonFeedReader</span>()));</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>run();</span></pre></div>
 
