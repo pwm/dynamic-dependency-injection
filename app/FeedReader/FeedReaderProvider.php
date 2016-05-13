@@ -5,7 +5,7 @@ use Pimple\ServiceProviderInterface;
 use Symfony\Component\Console\Exception\LogicException;
 
 /**
- * @author Zsolt Szende <szendezs@gmail.com>
+ * @author Zsolt Szende <pwmosuito@gmail.com>
  */
 class FeedReaderProvider implements ServiceProviderInterface
 {

@@ -3,7 +3,7 @@
 use App\FeedReader\FeedReaderInterface;
 
 /**
- * @author Zsolt Szende <szendezs@gmail.com>
+ * @author Zsolt Szende <pwmosuito@gmail.com>
  */
 class JsonFeedReader implements FeedReaderInterface
 {
