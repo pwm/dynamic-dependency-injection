@@ -97,23 +97,28 @@ reading JSON data from http://foobar.com/feed ...
 [pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader foobar <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...</pre></div>
 
-<p>It ignores the feedType parameter. Well, not surprising given we injected JsonFeedReader, a concrete implementation, in console.php. So we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we can only access the feedType parameter from within the FeedReaderCommand hence we cannot use it to choose a reader strategy when instantiating the FeedReaderCommand. A bit of a catch 22. </p>
+<p>It ignores the "feedType" parameter. Well, not surprising given we injected JsonFeedReader, a concrete implementation, in console.php. So we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we can only access the feedType parameter from within the FeedReaderCommand hence we cannot use it to choose a reader strategy when instantiating the FeedReaderCommand. A bit of a catch 22.</p>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$readerStrategies</span> <span class="pl-k">=</span> [</span>
-<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>json<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">JsonFeedReader</span><span class="pl-k">::</span><span class="pl-c1">class</span>,</span>
-<span class="pl-s1">    <span class="pl-s"><span class="pl-pds">'</span>xml<span class="pl-pds">'</span></span>  <span class="pl-k">=&gt;</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">XmlFeedReader</span><span class="pl-k">::</span><span class="pl-c1">class</span>,</span>
-<span class="pl-s1">];</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-smi">$strategyResolver</span> <span class="pl-k">=</span> <span class="pl-k">function</span> (<span class="pl-smi">$feedType</span>) <span class="pl-k">use</span> (<span class="pl-smi">$readerStrategies</span>) {</span>
+<p>Now what if somehow we could capture the computation required to choose a strategy and inject that into the FeedReaderCommand? Then, once we have the value of "feedType" we can execute the computation and the result will be the strategy selected. Sounds a bit cryptic? Well, think closure! Let's edit our console.php script:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$readerStrategyResolver</span> <span class="pl-k">=</span> <span class="pl-k">function</span> (<span class="pl-smi">$feedType</span>) {</span>
+<span class="pl-s1">    <span class="pl-smi">$readerStrategies</span> <span class="pl-k">=</span> [</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>json<span class="pl-pds">'</span></span> <span class="pl-k">=&gt;</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">JsonFeedReader</span><span class="pl-k">::</span><span class="pl-c1">class</span>,</span>
+<span class="pl-s1">        <span class="pl-s"><span class="pl-pds">'</span>xml<span class="pl-pds">'</span></span>  <span class="pl-k">=&gt;</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">XmlFeedReader</span><span class="pl-k">::</span><span class="pl-c1">class</span>,</span>
+<span class="pl-s1">    ];</span>
 <span class="pl-s1">    <span class="pl-k">if</span> (<span class="pl-k">!</span> <span class="pl-c1">array_key_exists</span>(<span class="pl-smi">$feedType</span>, <span class="pl-smi">$readerStrategies</span>)) {</span>
 <span class="pl-s1">        <span class="pl-k">throw</span> <span class="pl-k">new</span> <span class="pl-c1">\RuntimeException</span>(<span class="pl-s"><span class="pl-pds">'</span>Not a feed type I can read ...<span class="pl-pds">'</span></span>);</span>
 <span class="pl-s1">    }</span>
 <span class="pl-s1">    <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-smi">$readerStrategies</span>[<span class="pl-smi">$feedType</span>]();</span>
 <span class="pl-s1">};</span>
 <span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>add(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\</span><span class="pl-c1">FeedReaderCommand</span>(<span class="pl-smi">$strategyResolver</span>));</span></pre></div>
+<span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
+<span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>add(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\</span><span class="pl-c1">FeedReaderCommand</span>(<span class="pl-smi">$readerStrategyResolver</span>));</span>
+<span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>run();</span></pre></div>
 
-<p>Left out the configure() method for brevity.</p>
+<p>In PHP, just like in many other languages, functions are first-class citizens, which means, amongst other things, that we can pass then around as values. Here we injected a function, $strategyResolver, that requires the parameter $feedType and returns a reader strategy based on the value of $feedType. $strategyResolver is a simple factory function.</p>
+
+<p>For this to work we need to change FeedReaderCommand (I left out configure() for brevity, as that doesn't change):</p>
 
 <div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">FeedReaderCommand</span> <span class="pl-k">extends</span> <span class="pl-e">Command</span></span>
 <span class="pl-s1">{</span>
@@ -127,11 +132,6 @@ reading JSON data from http://foobar.com/feed ...</pre></div>
 <span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">readerStrategyResolver</span> <span class="pl-k">=</span> <span class="pl-smi">$readerStrategyResolver</span>;</span>
 <span class="pl-s1">    }</span>
 <span class="pl-s1"></span>
-<span class="pl-s1">    <span class="pl-k">private</span> <span class="pl-k">function</span> <span class="pl-en">setFeedReader</span>(<span class="pl-c1">FeedReaderInterface</span> <span class="pl-smi">$feedReader</span>)</span>
-<span class="pl-s1">    {</span>
-<span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span> <span class="pl-k">=</span> <span class="pl-smi">$feedReader</span>;</span>
-<span class="pl-s1">    }</span>
-<span class="pl-s1"></span>
 <span class="pl-s1">    <span class="pl-k">protected</span> <span class="pl-k">function</span> <span class="pl-en">execute</span>(<span class="pl-c1">InputInterface</span> <span class="pl-smi">$input</span>, <span class="pl-c1">OutputInterface</span> <span class="pl-smi">$output</span>)</span>
 <span class="pl-s1">    {</span>
 <span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span>setFeedReader(<span class="pl-c1">call_user_func</span>(</span>
@@ -141,7 +141,24 @@ reading JSON data from http://foobar.com/feed ...</pre></div>
 <span class="pl-s1"></span>
 <span class="pl-s1">        <span class="pl-smi">$output</span><span class="pl-k">-&gt;</span>writeln(<span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span><span class="pl-k">-&gt;</span>read(<span class="pl-smi">$input</span><span class="pl-k">-&gt;</span>getArgument(<span class="pl-s"><span class="pl-pds">'</span>feedUrl<span class="pl-pds">'</span></span>)));</span>
 <span class="pl-s1">    }</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">    <span class="pl-k">private</span> <span class="pl-k">function</span> <span class="pl-en">setFeedReader</span>(<span class="pl-c1">FeedReaderInterface</span> <span class="pl-smi">$feedReader</span>)</span>
+<span class="pl-s1">    {</span>
+<span class="pl-s1">        <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span> <span class="pl-k">=</span> <span class="pl-smi">$feedReader</span>;</span>
+<span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
+
+<p>Our $readerStrategyResolver closure is injected upon instantiation. This encapsulates the computation required to choose a reader strategy. In the execute() method we finally have access to "feedType" so we can execute $readerStrategyResolver and pass the return value into setFeedReader(). This way we can type hint in the setter and ensure that our closure returns a concrete implementation of FeedReaderInterface. Voila!</p>
+
+<div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader json <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
+reading JSON data from http://foobar.com/feed ...
+[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader xml <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
+reading XML data from http://foobar.com/feed ...
+[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader foobar <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
+  [RuntimeException]
+  Not a feed <span class="pl-c1">type</span> I can <span class="pl-c1">read</span> ...</pre></div>
+
+<p>This is all there is to it.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/pwm/dynamic-dependency-injection">Dynamic dependency injection</a> is maintained by <a href="https://github.com/pwm">pwm</a>.</span>
