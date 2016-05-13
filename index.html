@@ -21,41 +21,16 @@
     <section class="main-content">
       <p>In this article I would like to demonstrate a way to inject dependencies that are not known until runtime. There are many use cases for this and in essence it is about choosing between concrete implementations of some common interface. In object oriented design this is known at the Strategy pattern. The choice can be made in various ways, for example via a configuration option or a command line parameter in case of a console command. </p>
 
-<p>Let's say we have to process some remote feeds periodically. Some feeds will return data in JSON format, some in XML and some in (oh gosh!) CSV. Periodically, ok, this sounds like a cron job. For the sake of not reinventing the wheel we will use some well known libraries for our shiny new Feed Reader project, namely the Symfony Console component, which is the de-facto component in PHP to create CLI commands, and the Pimple, which is a simple dependency injection container.</p>
+<p>Let's say we have to process some remote feeds periodically. Some feeds will return data in JSON format and some in XML. Let's start by defining the interface:</p>
 
-<p>First let's set up the project:</p>
-
-<div class="highlight highlight-source-shell"><pre>$ mkdir feed-reader <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> feed-reader
-$ curl -s https://getcomposer.org/installer <span class="pl-k">|</span> php
-$ composer.phar require symfony/console
-$ composer.phar require pimple/pimple</pre></div>
-
-<p>Our code will live in the app/ directory and under the App root namespace. The feed reader component will live under app/FeedReader.</p>
-
-<div class="highlight highlight-source-shell"><pre>$ vim composer.json
-<span class="pl-s"><span class="pl-pds">"</span>autoload<span class="pl-pds">"</span></span>: {
-    <span class="pl-s"><span class="pl-pds">"</span>psr-4<span class="pl-pds">"</span></span>: {
-        <span class="pl-s"><span class="pl-pds">"</span>App<span class="pl-cce">\\</span><span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>app/<span class="pl-pds">"</span></span>
-    }
-}
-$ mkdir -p app/FeedReader <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">cd</span> app/FeedReader</pre></div>
-
-<p>So far so good. Let's start by defining FeedReaderInterface.php:</p>
-
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">interface</span> <span class="pl-en">FeedReaderInterface</span></span>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">interface</span> <span class="pl-en">FeedReaderInterface</span></span>
 <span class="pl-s1">{</span>
 <span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">read</span>(<span class="pl-smi">$url</span>);</span>
 <span class="pl-s1">}</span></pre></div>
 
-<p>This was easy (well, intentionally). We have a read() method that requires a $url parameter, which is the url of the remote feed we will read from. Now let's implement the various concrete readers, namely JsonFeedReader.php, XmlFeedReader.hp and CsvFeedReader.php:</p>
+<p>We have a read() method that requires a $url parameter, which is the url of the remote feed we will read from. Now let's implement the concrete readers for JSON and XML based feeds:</p>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader\Strategies</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">App\FeedReader\FeedReaderInterface</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">JsonFeedReader</span> <span class="pl-k">implements</span> <span class="pl-e">FeedReaderInterface</span></span>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">JsonFeedReader</span> <span class="pl-k">implements</span> <span class="pl-e">FeedReaderInterface</span></span>
 <span class="pl-s1">{</span>
 <span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">read</span>(<span class="pl-smi">$url</span>)</span>
 <span class="pl-s1">    {</span>
@@ -63,11 +38,7 @@ $ mkdir -p app/FeedReader <span class="pl-k">&amp;&amp;</span> <span class="pl-c
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader\Strategies</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">App\FeedReader\FeedReaderInterface</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">XmlFeedReader</span> <span class="pl-k">implements</span> <span class="pl-e">FeedReaderInterface</span></span>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">XmlFeedReader</span> <span class="pl-k">implements</span> <span class="pl-e">FeedReaderInterface</span></span>
 <span class="pl-s1">{</span>
 <span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">read</span>(<span class="pl-smi">$url</span>)</span>
 <span class="pl-s1">    {</span>
@@ -75,28 +46,9 @@ $ mkdir -p app/FeedReader <span class="pl-k">&amp;&amp;</span> <span class="pl-c
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader\Strategies</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">App\FeedReader\FeedReaderInterface</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">CsvFeedReader</span> <span class="pl-k">implements</span> <span class="pl-e">FeedReaderInterface</span></span>
-<span class="pl-s1">{</span>
-<span class="pl-s1">    <span class="pl-k">public</span> <span class="pl-k">function</span> <span class="pl-en">read</span>(<span class="pl-smi">$url</span>)</span>
-<span class="pl-s1">    {</span>
-<span class="pl-s1">        <span class="pl-k">return</span> <span class="pl-c1">sprintf</span>(<span class="pl-s"><span class="pl-pds">'</span>reading CSV data from %s ...<span class="pl-pds">'</span></span>, <span class="pl-smi">$url</span>);</span>
-<span class="pl-s1">    }</span>
-<span class="pl-s1">}</span></pre></div>
+<p>Great, we have our reader strategies. Next, let's create the command itself. I will use the Symfony Command component for this. If you're not familiar with it you can read about it <a href="http://symfony.com/doc/current/components/console/introduction.html">here</a>:</p>
 
-<p>Great, we have our strategies. Next, let's create the command itself, FeedReaderCommand.php. If you're not familiar with the Symfony Console component you can read about it <a href="http://symfony.com/doc/current/components/console/introduction.html">here</a>:</p>
-
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span> <span class="pl-k">namespace</span> <span class="pl-en">App\FeedReader</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Command\Command</span>;</span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Input\InputArgument</span>;</span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Input\InputInterface</span>;</span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Output\OutputInterface</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">FeedReaderCommand</span> <span class="pl-k">extends</span> <span class="pl-e">Command</span></span>
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">FeedReaderCommand</span> <span class="pl-k">extends</span> <span class="pl-e">Command</span></span>
 <span class="pl-s1">{</span>
 <span class="pl-s1">    <span class="pl-k">private</span> <span class="pl-smi">$feedReader</span>;</span>
 <span class="pl-s1"></span>
@@ -117,39 +69,35 @@ $ mkdir -p app/FeedReader <span class="pl-k">&amp;&amp;</span> <span class="pl-c
 <span class="pl-s1"></span>
 <span class="pl-s1">    <span class="pl-k">protected</span> <span class="pl-k">function</span> <span class="pl-en">execute</span>(<span class="pl-c1">InputInterface</span> <span class="pl-smi">$input</span>, <span class="pl-c1">OutputInterface</span> <span class="pl-smi">$output</span>)</span>
 <span class="pl-s1">    {</span>
-<span class="pl-s1">        <span class="pl-smi">$output</span><span class="pl-k">-&gt;</span>writeln(<span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span><span class="pl-k">-&gt;</span>read(<span class="pl-smi">$input</span><span class="pl-k">-&gt;</span>getArgument(<span class="pl-s"><span class="pl-pds">'</span>feedUrl<span class="pl-pds">'</span></span>)));</span>
+<span class="pl-s1">        <span class="pl-smi">$url</span> <span class="pl-k">=</span> <span class="pl-smi">$input</span><span class="pl-k">-&gt;</span>getArgument(<span class="pl-s"><span class="pl-pds">'</span>feedUrl<span class="pl-pds">'</span></span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">        <span class="pl-smi">$data</span> <span class="pl-k">=</span> <span class="pl-smi">$this</span><span class="pl-k">-&gt;</span><span class="pl-smi">feedReader</span><span class="pl-k">-&gt;</span>read(<span class="pl-smi">$url</span>);</span>
+<span class="pl-s1"></span>
+<span class="pl-s1">        <span class="pl-smi">$output</span><span class="pl-k">-&gt;</span>writeln(<span class="pl-smi">$data</span>);</span>
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<p>Finally let's create the script "console.php" in the app/ directory that bootstraps this whole thing:</p>
+<p>Here we defined 2 CLI arguments, namely "feedType" and "feedUrl", that the user will define at runtime. The former is the type of the feed, ie. JSON or XML, the latter is the url. </p>
 
-<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-c">#!/usr/bin/env php</span></span>
-<span class="pl-s1"><span class="pl-k">&lt;</span>?<span class="pl-c1">php</span></span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">require</span> <span class="pl-c1">__DIR__</span><span class="pl-k">.</span><span class="pl-s"><span class="pl-pds">'</span>/../vendor/autoload.php<span class="pl-pds">'</span></span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">App\FeedReader</span>;</span>
-<span class="pl-s1"><span class="pl-k">use</span> <span class="pl-c1">Symfony\Component\Console\Application</span> <span class="pl-k">as</span> <span class="pl-c1">Console</span>;</span>
-<span class="pl-s1"></span>
-<span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
+<p>Finally let's create the runnable "console.php" script that bootstraps this whole thing:</p>
+
+<div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>add(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\</span><span class="pl-c1">FeedReaderCommand</span>(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">JsonFeedReader</span>()));</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>run();</span></pre></div>
 
-<p>It is time to test it:</p>
+<p>Great, it is time to test it:</p>
 
-<div class="highlight highlight-source-shell"><pre>pwm@pwm-mbp <span class="pl-k">~</span>/feed-reader <span class="pl-c"># app/console feed-reader json "http://foobar.com/feed"</span>
+<div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader json <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...</pre></div>
 
-<p>It works! All is well! Hm, except one thing:</p>
+<p>It works! All is well! Hm, except there's a small issue:</p>
 
-<div class="highlight highlight-source-shell"><pre>pwm@pwm-mbp <span class="pl-k">~</span>/feed-reader <span class="pl-c"># app/console feed-reader xml "http://foobar.com/feed"</span>
+<div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader xml <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...
-pwm@pwm-mbp <span class="pl-k">~</span>/feed-reader <span class="pl-c"># app/console feed-reader csv "http://foobar.com/feed"</span>
-reading JSON data from http://foobar.com/feed ...
-pwm@pwm-mbp <span class="pl-k">~</span>/feed-reader <span class="pl-c"># app/console feed-reader foobar "http://foobar.com/feed"</span>
+[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader foobar <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...</pre></div>
 
-<p>Of course. In console.php we injected JsonFeedReader. </p>
+<p>It ignores the feed type. Well, not surprising given we injected JsonFeedReader, a concrete implementation, in console.php. So we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we have no access to the feed type parameter when we instantiate FeedReaderCommand.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/pwm/dynamic-dependency-injection">Dynamic dependency injection</a> is maintained by <a href="https://github.com/pwm">pwm</a>.</span>
