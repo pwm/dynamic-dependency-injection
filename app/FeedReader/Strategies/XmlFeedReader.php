@@ -3,7 +3,7 @@
 use App\FeedReader\FeedReaderInterface;
 
 /**
- * @author Zsolt Szende <pwmosuito@gmail.com>
+ * @author Zsolt Szende <pwmosquito@gmail.com>
  */
 class XmlFeedReader implements FeedReaderInterface
 {

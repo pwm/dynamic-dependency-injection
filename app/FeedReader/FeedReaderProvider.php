@@ -5,7 +5,7 @@ use Pimple\ServiceProviderInterface;
 use Symfony\Component\Console\Exception\LogicException;
 
 /**
- * @author Zsolt Szende <pwmosuito@gmail.com>
+ * @author Zsolt Szende <pwmosquito@gmail.com>
  */
 class FeedReaderProvider implements ServiceProviderInterface
 {
@@ -15,9 +15,9 @@ class FeedReaderProvider implements ServiceProviderInterface
      * @var array
      */
     private static $readerStrategyMap = [
-        'csv'  => Strategies\CsvFeedReader::class,
-        'xml'  => Strategies\XmlFeedReader::class,
         'json' => Strategies\JsonFeedReader::class,
+        'xml'  => Strategies\XmlFeedReader::class,
+        'csv'  => Strategies\CsvFeedReader::class,
     ];
 
 

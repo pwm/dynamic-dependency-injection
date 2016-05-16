@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * @author Zsolt Szende <pwmosuito@gmail.com>
+ * @author Zsolt Szende <pwmosquito@gmail.com>
  */
 class FeedReaderCommand extends Command
 {
@@ -46,7 +46,7 @@ class FeedReaderCommand extends Command
     {
         $this
             ->setName('feed-reader')
-            ->setDescription('This command reads feeds. Well, it simulates it anyway.')
+            ->setDescription('This command processes 3rd party data feeds. Well, it simulates it anyway :).')
             ->addArgument('feedType', InputArgument::REQUIRED, 'The type of the feed.')
             ->addArgument('feedUrl', InputArgument::REQUIRED, 'The url of the feed.');
     }

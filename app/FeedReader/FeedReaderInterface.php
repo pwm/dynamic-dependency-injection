@@ -1,7 +1,7 @@
 <?php namespace App\FeedReader;
 
 /**
- * @author Zsolt Szende <pwmosuito@gmail.com>
+ * @author Zsolt Szende <pwmosquito@gmail.com>
  */
 interface FeedReaderInterface
 {
