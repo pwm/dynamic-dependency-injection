@@ -22,12 +22,12 @@
       <h3>
 <a id="intro" class="anchor" href="#intro" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Intro</h3>
 
-<p>In this short article I would like to demonstrate a way to inject dependencies that are not known until runtime. There are many use cases for this and in essence it is about choosing between concrete implementations of some common interface. In object oriented design this is known at the Strategy pattern. The choice itself can be made in various ways, for example via a configuration option or a command line parameter in case of a console command, and I think it is the most interesting part of the pattern. </p>
+<p>In this short article I would like to demonstrate a way to inject dependencies that are not known until runtime. There are many use cases for this and in essence it is about choosing between concrete implementations of some common interface. In object oriented design this is known at the Strategy pattern. The choice itself can be made in various ways, for example via a configuration option or a command line parameter in case of a console command, and I think the dynamic nature of the choice is the most interesting part of the pattern. </p>
 
 <h3>
 <a id="a-practical-example" class="anchor" href="#a-practical-example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A practical example</h3>
 
-<p>Let's say we have to process some remote feeds periodically. Some feeds will return data in JSON format and some in XML. Let's start by defining the interface:</p>
+<p>Let's say we have to process 3rd party data feeds periodically. Some of them will return data in JSON format and some in XML. Let's start by defining the interface for reading the feeds:</p>
 
 <div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">interface</span> <span class="pl-en">FeedReaderInterface</span></span>
 <span class="pl-s1">{</span>
@@ -52,7 +52,7 @@
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<p>Great, we have our concrete reader strategies. Next, let's create the command itself. I will use the Symfony Command component for this. If you're not familiar with it you can read about it <a href="http://symfony.com/doc/current/components/console/introduction.html">here</a>:</p>
+<p>Great, now we have our concrete reader strategies. Next, let's create the command itself. For this I will use the Symfony Command component. If you're not familiar with it you can read about it <a href="http://symfony.com/doc/current/components/console/introduction.html">here</a>:</p>
 
 <div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-k">class</span> <span class="pl-en">FeedReaderCommand</span> <span class="pl-k">extends</span> <span class="pl-e">Command</span></span>
 <span class="pl-s1">{</span>
@@ -80,28 +80,28 @@
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<p>We have 2 command line arguments, namely "feedType" and "feedUrl". The point is that it is the user who define these at runtime. The former is the type of the feed, ie. JSON or XML, the latter is the url.</p>
+<p>Here we have 2 command line arguments, namely "feedType" and "feedUrl". The former is the type of the feed, ie. JSON or XML, the latter is the url. The point is that it is the user who will define these at runtime.</p>
 
-<p>Finally let's create a simple runnable script, console.php, that bootstraps this whole thing:</p>
+<p>Finally let's create a simple runnable script, namely console.php, that bootstraps this whole thing:</p>
 
 <div class="highlight highlight-text-html-php"><pre><span class="pl-pse">&lt;?php</span><span class="pl-s1"></span>
 <span class="pl-s1"><span class="pl-smi">$console</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-c1">Console</span>();</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>add(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\</span><span class="pl-c1">FeedReaderCommand</span>(<span class="pl-k">new</span> <span class="pl-c1">FeedReader\Strategies\</span><span class="pl-c1">JsonFeedReader</span>()));</span>
 <span class="pl-s1"><span class="pl-smi">$console</span><span class="pl-k">-&gt;</span>run();</span></pre></div>
 
-<p>Great, it is time to test it:</p>
+<p>Great, it is time to give it a go:</p>
 
 <div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader json <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...</pre></div>
 
-<p>It works! All is well! Hm, except there's a small issue:</p>
+<p>All is well! Hm, except there's a small issue:</p>
 
 <div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader xml <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...
 [pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader foobar <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...</pre></div>
 
-<p>It ignores the "feedType" parameter. Well, not surprising really given we injected JsonFeedReader, a concrete implementation instead of whatever the user selected. So at the moment we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we can only access the "feedType" parameter from within the FeedReaderCommand's execute() function hence we cannot use it to choose a reader strategy when instantiating the FeedReaderCommand. A bit of a catch 22.</p>
+<p>It ignores the "feedType" parameter. Well, not surprising really, given we injected JsonFeedReader, a concrete implementation instead of whatever the user selected. So at the moment we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we can only access the "feedType" parameter from within the FeedReaderCommand's execute() function hence we cannot use it to choose a reader strategy when instantiating the class. A bit of a catch 22.</p>
 
 <p>Now what if somehow we could capture the computation required to choose a strategy and inject that into FeedReaderCommand? Then, once we possess the value of "feedType" we can execute said computation and the result will be the strategy selected. Sounds a bit cryptic? Well, think closure! Let's edit our console.php script:</p>
 
@@ -152,7 +152,7 @@ reading JSON data from http://foobar.com/feed ...</pre></div>
 <span class="pl-s1">    }</span>
 <span class="pl-s1">}</span></pre></div>
 
-<p>Our new $readerStrategyResolver function is injected upon instantiation and it encapsulates the computation required to choose a concrete reader strategy. Then in execute(), where we have access to "feedType", we can execute $readerStrategyResolver and pass its return value into setFeedReader(). Notice that using a setter allows us to type hint and thus ensure that our closure returns an implementation of FeedReaderInterface. Voila!</p>
+<p>Our new $readerStrategyResolver function is injected upon instantiation and it encapsulates the computation required to choose a concrete reader strategy. Then in execute(), where we have access to the value of "feedType", we can execute $readerStrategyResolver and pass its return value into setFeedReader(). Notice that using a setter also allows us to type hint and thus ensure that our closure returns an implementation of FeedReaderInterface. Neat!</p>
 
 <div class="highlight highlight-source-shell"><pre>[pwm@mbp <span class="pl-k">~</span>]$ app/console feed-reader json <span class="pl-s"><span class="pl-pds">"</span>http://foobar.com/feed<span class="pl-pds">"</span></span>
 reading JSON data from http://foobar.com/feed ...
