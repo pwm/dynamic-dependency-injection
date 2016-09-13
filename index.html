@@ -103,7 +103,7 @@ reading JSON data from http://foobar.com/feed ...</pre></div>
 
 <p>It ignores the "feedType" parameter. Well, not surprising really, given we injected JsonFeedReader, a concrete implementation instead of whatever the user selected. So at the moment we have our strategies, but we don't yet have a way to dynamically choose between them. The problem we face is that we can only access the "feedType" parameter from within the FeedReaderCommand's execute() function hence we cannot use it to choose a reader strategy when instantiating the class. A bit of a catch 22.</p>
 
-<p>Now what if somehow we could capture the computation required to choose a strategy and inject that into FeedReaderCommand? Then, once we possess the value of "feedType" we can execute said computation and the result will be the strategy selected. Sounds a bit cryptic? Well, think closure! Let's edit our console.php script:</p>
+<p>Now what if somehow we could capture the computation required to choose a strategy and inject that into FeedReaderCommand? Then, once we possess the value of "feedType" we can execute said computation and the result will be the strategy selected. Sounds a bit cryptic? Let's edit our console.php script:</p>
 
 <div class="highlight highlight-text-html-php"><pre><span class="pl-s1"><span class="pl-smi">$readerStrategyResolver</span> <span class="pl-k">=</span> <span class="pl-k">function</span> (<span class="pl-smi">$feedType</span>) {</span>
 <span class="pl-s1">    <span class="pl-smi">$readerStrategies</span> <span class="pl-k">=</span> [</span>
